@@ -2,11 +2,31 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD MAPPER 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.bili.dao.TestDao">
+<mapper namespace="com.bili.dao.UserDao">
     <select id="getUserByPhone" parameterType="java.lang.String" resultType="com.bili.domain.User">
         select
-            * 
-        from t_user
-        where phone = #{phone}
+            *
+        from
+            t_user
+        where
+            phone = #{phone}
     </select>
+    
+    <insert id="addUser" parameterType="com.bili.domain.User" useGeneratedKeys="true" keyProperty="id">
+        insert into t_user (
+                phone, email, password, salt, createTime
+        )
+        values (
+                 #{phone}, #{email}, #{password}, #{salt},#{ createTime}
+        );
+    </insert>
+    
+    <insert id="addUserInfo" parameterType="com.bili.domain.UserInfo">
+        insert into t_user_info(
+              userId, nick, gender, birth, createTime
+        )
+        values(
+              #{userId}, #{nick}, #{gender}, #{birth}, #{createTime}
+      )
+    </insert>
 </mapper>

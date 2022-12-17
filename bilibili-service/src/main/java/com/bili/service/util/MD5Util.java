@@ -1,10 +1,9 @@
-package com.imooc.bilibili.service.util;
+package com.bili.service.util;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 

@@ -1,4 +1,4 @@
-package com.imooc.bilibili.service.util;
+package com.bili.service.util;
 
 import org.apache.tomcat.util.codec.binary.Base64;
 

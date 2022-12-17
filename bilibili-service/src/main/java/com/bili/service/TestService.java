@@ -1,4 +1,4 @@
-package com.bili;
+package com.bili.service;
 
 import com.bili.dao.TestDao;
 import org.springframework.stereotype.Service;
