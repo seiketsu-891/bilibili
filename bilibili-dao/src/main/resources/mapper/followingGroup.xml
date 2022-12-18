@@ -18,4 +18,13 @@
             t_following_group
         where `type` = #{type}
     </select>
+
+    <select id="getByUserId" parameterType="java.lang.Long" resultType="com.bili.domain.FollowingGroup">
+        select
+            *
+        from
+            t_following_group
+        where
+            userId = #{userId} or `type` in ('0', '1', '2')
+    </select>
 </mapper>

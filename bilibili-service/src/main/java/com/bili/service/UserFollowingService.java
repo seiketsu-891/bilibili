@@ -4,15 +4,18 @@ import com.bili.dao.UserFollowingDao;
 import com.bili.domain.FollowingGroup;
 import com.bili.domain.User;
 import com.bili.domain.UserFollowing;
+import com.bili.domain.UserInfo;
 import com.bili.domain.constant.UserConstant;
 import com.bili.domain.exception.ConditionException;
-import org.apache.catalina.realm.UserDatabaseRealm;
-import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class UserFollowingService {
@@ -53,4 +56,50 @@ public class UserFollowingService {
         userFollowingDao.addUserFollowing(userFollowing);
     }
 
+    public List<FollowingGroup> getUserFollowings(Long userId) {
+        User userDb = userService.getUserById(userId);
+        if(userDb == null){
+            throw new ConditionException("The user does not exist");
+        }
+
+        // 1. get FollowingList and set corresponding userInfo
+        List<UserFollowing> userFollowingList =  userFollowingDao.getUserFollowings(userId);
+        Set<Long> followingIdSet  = userFollowingList.stream().map(UserFollowing::getFollowingId).collect(Collectors.toSet());
+
+        List< UserInfo> userInfoList = new ArrayList<>();
+        if(followingIdSet.size() >  0){
+           userInfoList =  userService.getUserInfoByUserIds(followingIdSet);
+        }
+        for (UserFollowing userFollowing : userFollowingList) {
+            for (UserInfo userInfo : userInfoList) {
+                if(userFollowing.getFollowingId().equals(userInfo.getUserId())){
+                    userFollowing.setUserInfo(userInfo);
+                }
+            }
+        }
+
+        // 2. set group info
+        // (1)create a group which contains all following users.
+        //    this group does not need to be stored in the database
+        FollowingGroup followingGroupAll = new FollowingGroup();
+        followingGroupAll.setName("all");
+        followingGroupAll.setFollowingUserInfoList(userInfoList);
+
+        // (2) set userInfo for other groups
+        List<FollowingGroup> followingGroupList = followingGroupService.getByUserId(userId);
+        List<FollowingGroup> result = new ArrayList<>();
+
+        for (FollowingGroup group : followingGroupList) {
+            List<UserInfo> infoList  = new ArrayList<>();
+            for (UserFollowing userFollowing : userFollowingList) {
+                if(group.getId() .equals(userFollowing.getGroupId())){
+                    infoList.add(userFollowing.getUserInfo());
+                }
+            }
+            group.setFollowingUserInfoList(infoList);
+            result.add(group);
+        }
+
+        return  result;
+    }
 }

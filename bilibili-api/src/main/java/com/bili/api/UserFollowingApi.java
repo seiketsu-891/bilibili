@@ -5,12 +5,10 @@ import com.bili.domain.FollowingGroup;
 import com.bili.domain.JsonResponse;
 import com.bili.domain.UserFollowing;
 import com.bili.service.UserFollowingService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 @RestController
 public class UserFollowingApi {
@@ -28,5 +26,11 @@ public class UserFollowingApi {
         userFollowing.setUserId(userId);
         userFollowingService.addUserFollowing(userFollowing);
         return JsonResponse.success();
+    }
+
+    @GetMapping("/user-following")
+    public JsonResponse<List<FollowingGroup>> getUserFollowings(@RequestParam  Long userId){
+       List<FollowingGroup> userFollowingList = userFollowingService.getUserFollowings(userId);
+       return new JsonResponse<>(userFollowingList);
     }
 }

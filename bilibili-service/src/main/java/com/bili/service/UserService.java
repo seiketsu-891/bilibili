@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.util.Date;
+import java.util.List;
+import java.util.Set;
 
 @Service
 public class UserService {
@@ -107,5 +109,9 @@ public class UserService {
     public void updateUserInfo(UserInfo userInfo) {
          userInfo.setUpdateTime(new Date());
          userDao.updateUserInfos(userInfo);
+    }
+
+    public List<UserInfo> getUserInfoByUserIds(Set<Long> followingIdSet) {
+        return userDao.getUserInfoByUserIds(followingIdSet);
     }
 }
