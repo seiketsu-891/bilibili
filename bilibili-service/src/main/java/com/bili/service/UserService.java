@@ -8,8 +8,8 @@ import com.bili.domain.exception.ConditionException;
 import com.bili.service.util.MD5Util;
 import com.bili.service.util.RSAUtil;
 import com.bili.service.util.TokenUtil;
-import org.apache.el.parser.Token;
 import org.springframework.stereotype.Service;
+
 import javax.annotation.Resource;
 import java.util.Date;
 
@@ -79,5 +79,33 @@ public class UserService {
             throw new ConditionException("The phone number and password don't match");
         }
         return TokenUtil.generateToken(userDb.getId());
+    }
+
+    public User getUserById(Long userId) {
+        return userDao.getUserById(userId);
+    }
+
+    public UserInfo getUserInfoByUserId(Long userId) {
+        return userDao.getUserInfoByUserId(userId);
+    }
+
+    public void updateUsers(User user) throws Exception {
+        Long id = user.getId();
+        User userDb = userDao.getUserById(id);
+        if(userDb == null) {
+            throw new ConditionException("This user does not exist");
+        }
+        if(user.getPassword() != null && !user.getPassword().isBlank()){
+            String passwordRaw = RSAUtil.decrypt(user.getPassword());
+            String passwordMd5 = MD5Util.sign(passwordRaw, userDb.getSalt(), "UTF-8");
+            user.setPassword(passwordMd5);
+        }
+        user.setUpdateTime(new Date());
+        userDao.updateUsers(user);
+    }
+
+    public void updateUserInfo(UserInfo userInfo) {
+         userInfo.setUpdateTime(new Date());
+         userDao.updateUserInfos(userInfo);
     }
 }

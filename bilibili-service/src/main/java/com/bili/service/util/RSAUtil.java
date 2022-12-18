@@ -64,6 +64,7 @@ public class RSAUtil {
 		return Base64.encodeBase64String(cipher.doFinal(source.getBytes(StandardCharsets.UTF_8)));
 	}
 
+
 	public static Cipher getCipher() throws Exception {
 		byte[] decoded = Base64.decodeBase64(PRIVATE_KEY);
 		RSAPrivateKey rsaPrivateKey = (RSAPrivateKey) KeyFactory.getInstance("RSA")
