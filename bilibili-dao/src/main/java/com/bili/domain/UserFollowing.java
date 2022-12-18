@@ -9,6 +9,16 @@ public class UserFollowing {
     private Long groupId;
     private Date createTime;
 
+    private Boolean isMutualFollow;
+
+    public Boolean getMutualFollow() {
+        return isMutualFollow;
+    }
+
+    public void setMutualFollow(Boolean mutualFollow) {
+        isMutualFollow = mutualFollow;
+    }
+
     public UserInfo getUserInfo() {
         return userInfo;
     }

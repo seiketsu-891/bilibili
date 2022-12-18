@@ -9,7 +9,6 @@ import com.bili.domain.constant.UserConstant;
 import com.bili.domain.exception.ConditionException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Date;
@@ -101,5 +100,35 @@ public class UserFollowingService {
         }
 
         return  result;
+    }
+
+    public List<UserFollowing> getUserFollowers(Long userId){
+       List<UserFollowing> followerList =  userFollowingDao.getUserFollowers(userId);
+
+       // get userInfo and  data
+       Set<Long> followerIdSet  = followerList.stream().map(UserFollowing::getUserId).collect(Collectors.toSet());
+       List<UserInfo> userInfoList = new ArrayList<>();
+       if(followerList.size( ) > 0){
+            userInfoList = userService.getUserInfoByUserIds(followerIdSet);
+        }
+
+       // get followee data
+        List<UserFollowing> userFollowingList = userFollowingDao.getUserFollowings(userId);
+
+        // set userInfo and if is mutual follow
+        for (UserFollowing follower : followerList) {
+            for (UserInfo userInfo : userInfoList) {
+                if(follower.getUserId().equals(userInfo.getUserId())){
+                    follower.setMutualFollow(false); // initialize the value
+                    follower.setUserInfo(userInfo);
+                }
+            }
+            for (UserFollowing userFollowing : userFollowingList) {
+                 if(userFollowing.getFollowingId().equals(follower.getUserId())){
+                     follower.setMutualFollow(true);
+                 }
+            }
+        }
+       return followerList;
     }
 }

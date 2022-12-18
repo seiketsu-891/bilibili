@@ -27,4 +27,12 @@
             userId = #{userId}
     </select>
 
+    <select id="getUserFollowers" parameterType="java.lang.Long" resultType="com.bili.domain.UserFollowing">
+        select
+            *
+        from
+            t_user_following
+        where
+            followingId = #{followingId}
+    </select>
 </mapper>

@@ -16,7 +16,7 @@ POST http://localhost:8080/user-tokens
 Content-Type: application/json
 
 {
-  "phone": "10000000000",
+  "phone": "891",
   "password" : "fJcV4mIJre/pf44zmJVpPdgdPI2KBd77szNxm2NiSdSZ3juCtviWfXR6qJrxpZkvZz0OWwPE3PDhfpLBlrKTG1sMgmvXJyfrtmqKKsh32yc710ukDiTAwoV90J419EDKw/LjoXXBVOiiZodZrHWoqsZHRtCEOmRxYIxzPqwHk54="
 }
 
