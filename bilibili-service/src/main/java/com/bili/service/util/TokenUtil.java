@@ -18,7 +18,7 @@ public class TokenUtil {
        // such as the add operation below
        Calendar calendar = Calendar.getInstance();
        calendar.setTime(new Date());
-       calendar.add(Calendar.MINUTE, 30);
+       calendar.add(Calendar.HOUR, 24);
 
        return JWT
                .create()
