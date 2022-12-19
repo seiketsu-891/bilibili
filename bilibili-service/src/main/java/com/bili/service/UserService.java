@@ -1,5 +1,7 @@
 package com.bili.service;
 
+import com.alibaba.fastjson.JSONObject;
+import com.bili.dao.PageResult;
 import com.bili.dao.UserDao;
 import com.bili.domain.User;
 import com.bili.domain.UserInfo;
@@ -11,6 +13,7 @@ import com.bili.service.util.TokenUtil;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -113,5 +116,26 @@ public class UserService {
 
     public List<UserInfo> getUserInfoByUserIds(Set<Long> followingIdSet) {
         return userDao.getUserInfoByUserIds(followingIdSet);
+    }
+
+
+    /**
+     * @param params {pageSize, pageNum, userId, name}
+     */
+    public PageResult<UserInfo> getUserInfos(JSONObject params) {
+          Integer pageNum = params.getInteger("pageNum");
+          Integer pageSize = params.getInteger("pageSize");
+          Integer offset = ( pageNum - 1) * pageSize;
+          params.put("offset", offset);
+          String nick = params.getString("nick");
+
+          List<UserInfo> userInfoList = new ArrayList<>();
+          // the reason that we check if there are any entries whose nickname include nick is that:
+          // the performance of count is better by select entries
+           Integer  count = userDao.getUserInfoWithNick(nick);
+           if(count > 0){
+               userInfoList = userDao.getUserInfos(params);
+           }
+           return  new PageResult<UserInfo>(count, userInfoList);
     }
 }

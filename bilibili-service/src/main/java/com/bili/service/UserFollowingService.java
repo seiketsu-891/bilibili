@@ -56,11 +56,6 @@ public class UserFollowingService {
     }
 
     public List<FollowingGroup> getUserFollowings(Long userId) {
-        User userDb = userService.getUserById(userId);
-        if(userDb == null){
-            throw new ConditionException("The user does not exist");
-        }
-
         // 1. get FollowingList and set corresponding userInfo
         List<UserFollowing> userFollowingList =  userFollowingDao.getUserFollowings(userId);
         Set<Long> followingIdSet  = userFollowingList.stream().map(UserFollowing::getFollowingId).collect(Collectors.toSet());
@@ -131,4 +126,18 @@ public class UserFollowingService {
         }
        return followerList;
     }
+
+    public List<UserInfo>  checkFollowingRelationship(List<UserInfo> userInfos, Long userId) {
+       List<UserFollowing> userFollowingList = userFollowingDao.getUserFollowings(userId);
+        for (UserInfo userInfo : userInfos) {
+            userInfo.setFollowedByCurrentUser(false);
+            for (UserFollowing userFollowing : userFollowingList) {
+                  if(userFollowing.getFollowingId() .equals(userInfo.getUserId())){
+                     userInfo.setFollowedByCurrentUser(true);
+                }
+            }
+        }
+        return userInfos;
+    }
 }
+

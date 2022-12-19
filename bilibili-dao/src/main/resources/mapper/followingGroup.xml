@@ -27,4 +27,21 @@
         where
             userId = #{userId} or `type` in ('0', '1', '2')
     </select>
+
+    <insert id="addFollowingGroup" parameterType="com.bili.domain.FollowingGroup"  useGeneratedKeys="true" keyProperty="id">
+        insert into t_following_group(
+                userId, `name`, `type`, createTime
+            )values(
+                #{userId}, #{name}, #{type}, #{createTime}
+            )
+    </insert>
+
+    <select id="getFollowingGroup" parameterType="java.lang.Long" resultType="com.bili.domain.FollowingGroup">
+         select
+            *
+         from
+             t_following_group
+         where
+             userId = #{userId}
+    </select>
 </mapper>

@@ -9,6 +9,7 @@ import java.util.List;
 public interface FollowingGroupDao {
     FollowingGroup getByType(String type);
     FollowingGroup getById(Long id);
-
     List<FollowingGroup> getByUserId(Long userId);
+    Integer  addFollowingGroup(FollowingGroup followingGroup);
+    List<FollowingGroup> getFollowingGroup(Long userId);
 }

@@ -8,4 +8,5 @@ public class UserConstant {
     public static final String DEFAULT_NICK= "new user";
 
     public static final String USER_FOLLOWING_GROUP_TYPE_DEFAULT = "2";
+    public static final String USER_FOLLOWING_GROUP_TYPE_CUSTOM = "3";
 }

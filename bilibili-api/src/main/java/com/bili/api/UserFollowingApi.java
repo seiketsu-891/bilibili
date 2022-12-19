@@ -1,10 +1,14 @@
 package com.bili.api;
 
 import com.bili.api.support.UserSupport;
+import com.bili.dao.PageResult;
 import com.bili.domain.FollowingGroup;
 import com.bili.domain.JsonResponse;
 import com.bili.domain.UserFollowing;
+import com.bili.domain.UserInfo;
+import com.bili.service.FollowingGroupService;
 import com.bili.service.UserFollowingService;
+import org.apache.ibatis.ognl.IteratorEnumeration;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -16,6 +20,9 @@ public class UserFollowingApi {
     private UserSupport userSupport;
     @Resource
     private UserFollowingService userFollowingService;
+
+    @Resource
+    private FollowingGroupService followingGroupService;
 
     /**
      * add a following relationship
@@ -47,5 +54,27 @@ public class UserFollowingApi {
         Long userId  = userSupport.getCurrentUserId();
         List<UserFollowing> followerList = userFollowingService.getUserFollowers(userId);
         return new JsonResponse<>(followerList);
+    }
+
+    /**
+     * add a following group
+     * @return followingGroupId
+     */
+    @PostMapping("/user-following-groups")
+    public JsonResponse<Long> addFollowingGroup(@RequestBody FollowingGroup followingGroup){
+        Long userId = userSupport.getCurrentUserId();
+        followingGroup.setUserId(userId);
+        Long groupId = followingGroupService.addFollowingGroup(followingGroup);
+        return new JsonResponse<>(groupId);
+    }
+
+    /**
+     * get all user following groups
+     */
+    @GetMapping("/user-following-groups")
+    public JsonResponse<List<FollowingGroup>> getFollowingGroups(){
+        Long userId = userSupport.getCurrentUserId();
+        List<FollowingGroup> followingGroupList = followingGroupService.getFollowingGroups(userId);
+        return new JsonResponse<>(followingGroupList);
     }
 }

@@ -10,7 +10,17 @@ public class UserInfo {
     private String sign;
     private String gender;
     private String birth;
+    private Boolean followedByCurrentUser;
     private Date createTime;
+
+    public Boolean getFollowedByCurrentUser() {
+        return followedByCurrentUser;
+    }
+
+    public void setFollowedByCurrentUser(Boolean followedByCurrentUser) {
+        this.followedByCurrentUser = followedByCurrentUser;
+    }
+
     private Date updateTime;
 
     public Long getId() {

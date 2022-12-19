@@ -1,19 +1,25 @@
 package com.bili.api;
 
+import com.alibaba.fastjson.JSONObject;
 import com.bili.api.support.UserSupport;
+import com.bili.dao.PageResult;
 import com.bili.domain.JsonResponse;
 import com.bili.domain.User;
 import com.bili.domain.UserInfo;
+import com.bili.service.UserFollowingService;
 import com.bili.service.UserService;
 import com.bili.service.util.RSAUtil;
 import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
+import java.util.List;
 
 
 @RestController
 public class UserApi {
     @Resource
     private UserService userService;
+    @Resource
+    private UserFollowingService userFollowingService;
     @Resource
     private UserSupport userSupport;
 
@@ -79,5 +85,27 @@ public class UserApi {
         userInfo.setUserId(userId);
         userService.updateUserInfo(userInfo);
         return JsonResponse.success();
+    }
+
+
+    /**
+     * get user
+     */
+    @GetMapping("/user-infos")
+    public JsonResponse<PageResult<UserInfo>> getUserInfos(@RequestParam Integer pageNum, @RequestParam Integer pageSize, @RequestParam(required = false) String nick){
+        Long userId = userSupport.getCurrentUserId();
+        JSONObject params = new JSONObject();
+        params.put("pageNum", pageNum);
+        params.put("pageSize", pageSize);
+        params.put("nick", nick);
+        PageResult<UserInfo> userInfoPageResult = userService.getUserInfos(params);
+
+        // check the following relationship
+        if(userInfoPageResult.getTotal() > 0){
+           List<UserInfo> checkedResult =  userFollowingService.checkFollowingRelationship(userInfoPageResult.getList(), userId);
+           userInfoPageResult.setList(checkedResult);
+        }
+
+        return new JsonResponse<>(userInfoPageResult);
     }
 }
