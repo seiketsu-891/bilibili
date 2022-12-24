@@ -2,7 +2,7 @@ package com.bili.api;
 
 import com.alibaba.fastjson.JSONObject;
 import com.bili.api.support.UserSupport;
-import com.bili.dao.PageResult;
+import com.bili.domain.PageResult;
 import com.bili.domain.JsonResponse;
 import com.bili.domain.User;
 import com.bili.domain.UserInfo;

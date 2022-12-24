@@ -1,7 +1,7 @@
 package com.bili.service;
 
 import com.alibaba.fastjson.JSONObject;
-import com.bili.dao.PageResult;
+import com.bili.domain.PageResult;
 import com.bili.dao.UserDao;
 import com.bili.domain.User;
 import com.bili.domain.UserInfo;

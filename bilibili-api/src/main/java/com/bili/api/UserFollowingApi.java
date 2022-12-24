@@ -1,7 +1,6 @@
 package com.bili.api;
 
 import com.bili.api.support.UserSupport;
-import com.bili.dao.PageResult;
 import com.bili.domain.FollowingGroup;
 import com.bili.domain.JsonResponse;
 import com.bili.domain.UserFollowing;

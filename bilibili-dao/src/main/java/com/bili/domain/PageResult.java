@@ -1,4 +1,4 @@
-package com.bili.dao;
+package com.bili.domain;
 
 import java.util.List;
 
