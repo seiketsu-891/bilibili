@@ -5,10 +5,8 @@ import com.bili.dao.PageResult;
 import com.bili.domain.FollowingGroup;
 import com.bili.domain.JsonResponse;
 import com.bili.domain.UserFollowing;
-import com.bili.domain.UserInfo;
 import com.bili.service.FollowingGroupService;
 import com.bili.service.UserFollowingService;
-import org.apache.ibatis.ognl.IteratorEnumeration;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;

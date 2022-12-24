@@ -10,10 +10,7 @@ import com.bili.domain.exception.ConditionException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -56,10 +53,11 @@ public class UserFollowingService {
     }
 
     public List<FollowingGroup> getUserFollowings(Long userId) {
-        // 1. get FollowingList and set corresponding userInfo
+        // 1. get FollowingList
         List<UserFollowing> userFollowingList =  userFollowingDao.getUserFollowings(userId);
-        Set<Long> followingIdSet  = userFollowingList.stream().map(UserFollowing::getFollowingId).collect(Collectors.toSet());
 
+        // 2. get and set corresponding userInfo
+        Set<Long> followingIdSet  = userFollowingList.stream().map(UserFollowing::getFollowingId).collect(Collectors.toSet());
         List< UserInfo> userInfoList = new ArrayList<>();
         if(followingIdSet.size() >  0){
            userInfoList =  userService.getUserInfoByUserIds(followingIdSet);
@@ -72,17 +70,18 @@ public class UserFollowingService {
             }
         }
 
-        // 2. set group info
+        // 3. get and set group info
         // (1)create a group which contains all following users.
         //    this group does not need to be stored in the database
         FollowingGroup followingGroupAll = new FollowingGroup();
         followingGroupAll.setName("all");
         followingGroupAll.setFollowingUserInfoList(userInfoList);
 
+        List<FollowingGroup> result = new ArrayList<>();
+        result.add(followingGroupAll);
+
         // (2) set userInfo for other groups
         List<FollowingGroup> followingGroupList = followingGroupService.getByUserId(userId);
-        List<FollowingGroup> result = new ArrayList<>();
-
         for (FollowingGroup group : followingGroupList) {
             List<UserInfo> infoList  = new ArrayList<>();
             for (UserFollowing userFollowing : userFollowingList) {
@@ -97,20 +96,22 @@ public class UserFollowingService {
         return  result;
     }
 
+
     public List<UserFollowing> getUserFollowers(Long userId){
+        // 1. get followerList (<UserFollowing>)
        List<UserFollowing> followerList =  userFollowingDao.getUserFollowers(userId);
 
-       // get userInfo and  data
+       // 2.  get userInfo
        Set<Long> followerIdSet  = followerList.stream().map(UserFollowing::getUserId).collect(Collectors.toSet());
        List<UserInfo> userInfoList = new ArrayList<>();
        if(followerList.size( ) > 0){
             userInfoList = userService.getUserInfoByUserIds(followerIdSet);
         }
 
-       // get followee data
+       // 3. get followee data
         List<UserFollowing> userFollowingList = userFollowingDao.getUserFollowings(userId);
 
-        // set userInfo and if is mutual follow
+        // 4. set userInfo and check if is mutual follow
         for (UserFollowing follower : followerList) {
             for (UserInfo userInfo : userInfoList) {
                 if(follower.getUserId().equals(userInfo.getUserId())){
@@ -124,6 +125,7 @@ public class UserFollowingService {
                  }
             }
         }
+
        return followerList;
     }
 

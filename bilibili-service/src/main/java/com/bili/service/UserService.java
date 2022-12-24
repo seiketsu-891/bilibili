@@ -136,6 +136,6 @@ public class UserService {
            if(count > 0){
                userInfoList = userDao.getUserInfos(params);
            }
-           return  new PageResult<UserInfo>(count, userInfoList);
+           return new PageResult<>(count, userInfoList);
     }
 }
