@@ -7,7 +7,7 @@ public class UserMoment {
     private Long userId;
     private String type;
     private Long contentId;
-    private Date creteTime;
+    private Date createTime;
     private Date updateTime;
 
     public Long getId() {
@@ -42,12 +42,12 @@ public class UserMoment {
         this.contentId = contentId;
     }
 
-    public Date getCreteTime() {
-        return creteTime;
+    public Date getCreateTime() {
+        return createTime;
     }
 
-    public void setCreteTime(Date creteTime) {
-        this.creteTime = creteTime;
+    public void setCreateTime(Date createTime) {
+        this.createTime = createTime;
     }
 
     public Date getUpdateTime() {
