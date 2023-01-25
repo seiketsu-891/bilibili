@@ -18,7 +18,7 @@
         )
         values (
                  #{phone}, #{email}, #{password}, #{salt},#{ createTime}
-        );
+        )
     </insert>
     
     <insert id="addUserInfo" parameterType="com.bili.domain.UserInfo">

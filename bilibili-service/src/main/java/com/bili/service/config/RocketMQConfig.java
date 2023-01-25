@@ -6,11 +6,11 @@ import com.bili.domain.UserFollowing;
 import com.bili.domain.UserMoment;
 import com.bili.domain.constant.UserMomentsConstant;
 import com.bili.service.UserFollowingService;
+import io.netty.util.internal.StringUtil;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
 import org.apache.rocketmq.client.consumer.listener.MessageListenerConcurrently;
-import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.apache.rocketmq.common.message.MessageExt;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,56 +32,56 @@ public class RocketMQConfig {
     @Resource
     private UserFollowingService userFollowingService;
 
+
     @Bean("momentsProducer")
-    public DefaultMQProducer momentsProducer() throws MQClientException {
+    public DefaultMQProducer momentsProducer() throws Exception{
         DefaultMQProducer producer = new DefaultMQProducer(UserMomentsConstant.GROUP_MOMENTS);
-        producer.setSendMsgTimeout(10000);
+        producer.setSendMsgTimeout(60000);
         producer.setNamesrvAddr(nameServerAddr);
         producer.start();
         return producer;
     }
 
     @Bean("momentsConsumer")
-    public DefaultMQPushConsumer momentsConsumer() throws MQClientException {
+    public DefaultMQPushConsumer momentsConsumer() throws Exception{
         DefaultMQPushConsumer consumer = new DefaultMQPushConsumer(UserMomentsConstant.GROUP_MOMENTS);
         consumer.setNamesrvAddr(nameServerAddr);
         consumer.subscribe(UserMomentsConstant.TOPIC_MOMENTS, "*");
-
         // The consumer is configured to register a message listener,
         // which will be called every time the consumer receives a message.
         consumer.registerMessageListener(new MessageListenerConcurrently() {
             @Override
-            public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> messageExts, ConsumeConcurrentlyContext consumeConcurrentlyContext) {
+            public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> msgs, ConsumeConcurrentlyContext context){
                 // 1.get the message body and parse it into a UserMoment object.
-                MessageExt msg = messageExts.get(0);
-                if(msg == null) {
+                MessageExt msg = msgs.get(0);
+                if(msg == null){
                     return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
                 }
-
                 String bodyStr = new String(msg.getBody());
                 UserMoment userMoment = JSONObject.toJavaObject(JSONObject.parseObject(bodyStr), UserMoment.class);
 
                 // 2. retrieve a list of the users who are following the user who posted the moment.
                 Long userId = userMoment.getUserId();
-                List<UserFollowing> followers = userFollowingService.getUserFollowers(userId);
+                List<UserFollowing>fanList = userFollowingService.getUserFollowers(userId);
 
                 // 3. for each of the followers, get the list of the moments that the followers has
                 //    subscribed to from a Redis cache and add the new moment to its list
-                for (UserFollowing follower : followers) {
-                    String key = UserMomentsConstant.REDIS_KEY_PREFIX+ follower.getUserId();
-                    String subListStr = redisTemplate.opsForValue().get(key);
-                    List<UserMoment> subList = new ArrayList<>();
-                    if(subListStr != null && !subListStr.isEmpty()){
-                        subList = JSONArray.parseArray(subListStr, UserMoment.class);
+                for(UserFollowing fan : fanList){
+                    String key = "subscribed-" + fan.getUserId();
+                    String subscribedListStr = redisTemplate.opsForValue().get(key);
+                    List<UserMoment> subscribedList;
+                    if(StringUtil.isNullOrEmpty(subscribedListStr)){
+                        subscribedList = new ArrayList<>();
+                    }else{
+                        subscribedList = JSONArray.parseArray(subscribedListStr, UserMoment.class);
                     }
-                    subList.add(userMoment);
-
                     // update the cache with the modified list of moments
-                    redisTemplate.opsForValue().set(key, JSONObject.toJSONString(subList));
+                    subscribedList.add(userMoment);
+                    redisTemplate.opsForValue().set(key, JSONObject.toJSONString(subscribedList));
                 }
+
                 return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
             }
-
         });
         consumer.start();
         return consumer;
