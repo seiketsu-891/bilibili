@@ -16,8 +16,11 @@ public class UserAuthApi {
     @Resource
     private UserAuthService userAuthService;
 
+    /**
+     * get the list of authorities held by a user
+     */
     @GetMapping("/user-auths")
-    public JsonResponse<UserAuthorities> getUserAuthorities(){
+    public JsonResponse<UserAuthorities> getUserAuthorities() {
         Long userId = userSupport.getCurrentUserId();
         UserAuthorities userAuthorities = userAuthService.getUserAuthorities(userId);
         return new JsonResponse<>(userAuthorities);
