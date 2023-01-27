@@ -7,26 +7,26 @@
         <id column="id" property="id"/>
         <id column="roleId" property="roleId"/>
         <id column="elementOperationId" property="elementOperationId"/>
-        <association property="authElementOperation" javaType="com.bili.domain.auth.AuthRoleElementOperation">
+        <association property="authElementOperation" javaType="com.bili.domain.auth.AuthElementOperation">
             <id column="elementName" property="elementName"/>
             <id column="elementCode" property="elementCode"/>
             <id column="operationType" property="operationType"/>
         </association>
     </resultMap>
-    
-    
-    <select id="getRoleElementOperationsByRoleIds" parameterType="java.util.Set" resultMap="AuthElementOperationResultMap">
+
+    <select id="getRoleElementOperationsByRoleIds" parameterType="java.util.Set"
+            resultMap="AuthElementOperationResultMap">
         select
-            areo.*,
-            aeo.elementname,
-            aeo.elementcode,
-            aeo.operationtype
+        areo.*,
+        aeo.elementname,
+        aeo.elementcode,
+        aeo.operationtype
         from t_auth_role_element_operation areo
         left join t_auth_element_operation aeo
-            on areo.elementOperationId = aeo.id
-        where areo.roleId in 
-            <foreach collection="roleIdSet" item="roleId" index="index" open="(" close=")" separator=",">
-                #{roleId}
-            </foreach>
+        on areo.elementOperationId = aeo.id
+        where areo.roleId in
+        <foreach collection="roleIdSet" item="roleId" index="index" open="(" close=")" separator=",">
+            #{roleId}
+        </foreach>
     </select>
 </mapper>
