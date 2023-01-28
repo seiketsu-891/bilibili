@@ -15,4 +15,8 @@ public class UserRoleService {
     public List<UserRole> getUserRolesByUserId(Long userId) {
         return userRoleDao.getUserRolesByUserId(userId);
     }
+
+    public Integer addUserRole(UserRole userRole) {
+        return userRoleDao.addUserRole(userRole);
+    }
 }

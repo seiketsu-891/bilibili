@@ -7,5 +7,7 @@ import java.util.List;
 
 @Mapper
 public interface UserRoleDao {
-    public List<UserRole> getUserRolesByUserId(Long userId);
+    List<UserRole> getUserRolesByUserId(Long userId);
+
+    Integer addUserRole(UserRole userRole);
 }
