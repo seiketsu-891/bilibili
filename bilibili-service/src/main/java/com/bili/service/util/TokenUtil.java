@@ -6,39 +6,47 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.bili.domain.exception.ConditionException;
+
 import java.util.Calendar;
 import java.util.Date;
 
 public class TokenUtil {
-   private static final String ISSUER = "ISSUER";
-   public static String generateToken(Long userId) throws Exception {
-       Algorithm algorithm = Algorithm.RSA512(RSAUtil.getPublicKey(), RSAUtil.getPrivateKey());
+    public static final String TYPE_REFRESH = "refreshToken";
+    public static final String TYPE_ACCESS = "accessToken";
+    private static final String ISSUER = "ISSUER";
 
-       // Calendar provides a convenient way to perform date and time arithmetic
-       // such as the add operation below
-       Calendar calendar = Calendar.getInstance();
-       calendar.setTime(new Date());
-       calendar.add(Calendar.HOUR, 24);
+    public static String generateToken(Long userId, String type) throws Exception {
+        Algorithm algorithm = Algorithm.RSA512(RSAUtil.getPublicKey(), RSAUtil.getPrivateKey());
 
-       return JWT
-               .create()
-               .withKeyId(String.valueOf(userId))
-               .withIssuer(ISSUER)
-               .withExpiresAt(calendar.getTime())
-               .sign(algorithm);
-   }
+        // Calendar provides a convenient way to perform date and time arithmetic
+        // such as the add operation below
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(new Date());
+        if (TYPE_ACCESS.equals(type)) {
+            calendar.add(Calendar.HOUR, 1);
+        } else {
+            calendar.add(Calendar.DATE, 15);
+        }
 
-   public static Long verifyToken(String token){
-       try{
-           Algorithm algorithm = Algorithm.RSA512(RSAUtil.getPublicKey(), RSAUtil.getPrivateKey());
-           JWTVerifier verifier = JWT.require(algorithm).build();
-           DecodedJWT jwt = verifier.verify(token);
-           String userId = jwt.getKeyId();
-           return Long.valueOf(userId);
-       }catch (TokenExpiredException e){
-           throw new ConditionException("555", "token expired");
-       }catch (Exception e){
-           throw new ConditionException("illegal token");
-       }
-   }
+        return JWT
+                .create()
+                .withKeyId(String.valueOf(userId))
+                .withIssuer(ISSUER)
+                .withExpiresAt(calendar.getTime())
+                .sign(algorithm);
+    }
+
+    public static Long verifyToken(String token) {
+        try {
+            Algorithm algorithm = Algorithm.RSA512(RSAUtil.getPublicKey(), RSAUtil.getPrivateKey());
+            JWTVerifier verifier = JWT.require(algorithm).build();
+            DecodedJWT jwt = verifier.verify(token);
+            String userId = jwt.getKeyId();
+            return Long.valueOf(userId);
+        } catch (TokenExpiredException e) {
+            throw new ConditionException("555", "token expired");
+        } catch (Exception e) {
+            throw new ConditionException("illegal token");
+        }
+    }
 }

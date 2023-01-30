@@ -4,72 +4,57 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.bili.dao.UserDao">
     <select id="getUserByPhone" parameterType="java.lang.String" resultType="com.bili.domain.User">
-        select
-            *
-        from
-            t_user
-        where
-            phone = #{phone}
+        select *
+        from t_user
+        where phone = #{phone}
     </select>
-    
+
     <insert id="addUser" parameterType="com.bili.domain.User" useGeneratedKeys="true" keyProperty="id">
-        insert into t_user (
-                phone, email, password, salt, createTime
-        )
-        values (
-                 #{phone}, #{email}, #{password}, #{salt},#{ createTime}
-        )
+        insert into t_user (phone, email, password, salt, createTime)
+        values (#{phone}, #{email}, #{password}, #{salt}, #{ createTime})
     </insert>
-    
+
     <insert id="addUserInfo" parameterType="com.bili.domain.UserInfo">
-        insert into t_user_info(
-              userId, nick, gender, birth, createTime
-        )
-        values(
-              #{userId}, #{nick}, #{gender}, #{birth}, #{createTime}
-      )
+        insert into t_user_info(userId, nick, gender, birth, createTime)
+        values (#{userId}, #{nick}, #{gender}, #{birth}, #{createTime})
     </insert>
 
     <select id="getUserById" parameterType="java.lang.Long" resultType="com.bili.domain.User">
-        select
-            *
-        from
-            t_user
+        select *
+        from t_user
         where id = #{id}
     </select>
 
 
     <select id="getUserInfoByUserId" parameterType="java.lang.Long" resultType="com.bili.domain.UserInfo">
-        select
-            *
-        from
-            t_user_info
+        select *
+        from t_user_info
         where userId = #{userId}
     </select>
 
 
     <update id="updateUsers" parameterType="com.bili.domain.User">
         update
-            t_user
+        t_user
         set
-            <if test="phone != null and phone != '' ">
-                phone = #{phone},
-            </if>
+        <if test="phone != null and phone != '' ">
+            phone = #{phone},
+        </if>
         <if test="email != null and email != '' ">
-               email = #{email},
+            email = #{email},
         </if>
         <if test="password != null and password != '' ">
             password = #{password},
         </if>
-            updateTime = #{updateTime}
+        updateTime = #{updateTime}
         where
-            id = #{id}
+        id = #{id}
     </update>
 
 
     <update id="updateUserInfos" parameterType="com.bili.domain.UserInfo">
         update
-            t_user_info
+        t_user_info
         set
         <if test="nick != null and nick != '' ">
             nick = #{nick},
@@ -94,43 +79,56 @@
 
     <select id="getUserInfoByUserIds" resultType="com.bili.domain.UserInfo">
         select
-            *
+        *
         from
-            t_user_info
+        t_user_info
         where
-            1 = 1
-            <if test="userIdSet !=null and userIdSet.size() > 0">
-                and userId in
-                <foreach collection="userIdSet" item = "userId" index="index" open="(" close=")" separator=",">
-                     #{userId}
-                </foreach>
-            </if>
+        1 = 1
+        <if test="userIdSet !=null and userIdSet.size() > 0">
+            and userId in
+            <foreach collection="userIdSet" item="userId" index="index" open="(" close=")" separator=",">
+                #{userId}
+            </foreach>
+        </if>
     </select>
 
     <select id="getUserInfoWithNick" parameterType="java.lang.String" resultType="java.lang.Integer">
         select
-            count(1)
+        count(1)
         from
-            t_user_info
-        where
-            1 = 1
-            <if test="nick !=null and nick !=''">
-                 and   nick like '%${nick}%'
-            </if>
-    </select>
-    
-    <select id="getUserInfos" parameterType="java.util.Map" resultType="com.bili.domain.UserInfo">
-       select
-           *
-       from
-           t_user_info
+        t_user_info
         where
         1 = 1
         <if test="nick !=null and nick !=''">
-            and   nick like '%${nick}%'
+            and nick like '%${nick}%'
+        </if>
+    </select>
+
+    <select id="getUserInfos" parameterType="java.util.Map" resultType="com.bili.domain.UserInfo">
+        select
+        *
+        from
+        t_user_info
+        where
+        1 = 1
+        <if test="nick !=null and nick !=''">
+            and nick like '%${nick}%'
         </if>
         limit #{pageSize} offset #{offset}
     </select>
 
+    <delete id="deleteRefreshToken">
+        delete
+        from t_refresh_token
+        where userId = #{userId}
+          and refreshToken = #{refreshToken}
+    </delete>
+
+    <insert id="addRefreshToken">
+        insert into t_refresh_token(userId, refreshToken, createTime)
+        values (#{userId},
+                #{refreshToken},
+                #{createTime})
+    </insert>
 
 </mapper>

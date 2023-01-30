@@ -14,10 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Service
 @Transactional
@@ -92,7 +89,7 @@ public class UserService {
         if (!passwordMd5.equals(userDb.getPassword())) {
             throw new ConditionException("The phone number and password don't match");
         }
-        return TokenUtil.generateToken(userDb.getId());
+        return TokenUtil.generateToken(userDb.getId(), TokenUtil.TYPE_ACCESS);
     }
 
     public User getUserById(Long userId) {
@@ -146,5 +143,39 @@ public class UserService {
             userInfoList = userDao.getUserInfos(params);
         }
         return new PageResult<>(count, userInfoList);
+    }
+
+    public Map<String, Object> loginForDts(User user) throws Exception {
+        String phone = user.getPhone();
+        if (phone == null || phone.isBlank()) {
+            throw new ConditionException("Phone number cannot be empty");
+        }
+
+        User userDb = getUserByPhone(phone);
+        if (userDb == null) {
+            throw new ConditionException("This phone number has not been registered");
+        }
+
+        String passwordRaw;
+        try {
+            passwordRaw = RSAUtil.decrypt(user.getPassword());
+        } catch (Exception e) {
+            throw new ConditionException("Password decryption failed");
+        }
+        String passwordMd5 = MD5Util.sign(passwordRaw, userDb.getSalt(), "UTF-8");
+        if (!passwordMd5.equals(userDb.getPassword())) {
+            throw new ConditionException("The phone number and password don't match");
+        }
+
+        Long userId = user.getId();
+        String accessToken = TokenUtil.generateToken(userId, TokenUtil.TYPE_ACCESS);
+        String refreshToken = TokenUtil.generateToken(userId, TokenUtil.TYPE_REFRESH);
+
+        userDao.deleteRefreshToken(refreshToken, userId);
+        userDao.addRefreshToken(refreshToken, userId, new Date());
+        Map<String, Object> map = new HashMap<>();
+        map.put("accessToken", accessToken);
+        map.put("refreshToken", refreshToken);
+        return map;
     }
 }
