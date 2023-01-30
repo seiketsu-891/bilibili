@@ -1,8 +1,10 @@
 package com.bili.service;
 
 import com.alibaba.fastjson.JSONObject;
+import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.bili.dao.UserDao;
 import com.bili.domain.PageResult;
+import com.bili.domain.RefreshTokenDetail;
 import com.bili.domain.User;
 import com.bili.domain.UserInfo;
 import com.bili.domain.constant.UserConstant;
@@ -167,7 +169,7 @@ public class UserService {
             throw new ConditionException("The phone number and password don't match");
         }
 
-        Long userId = user.getId();
+        Long userId = userDb.getId();
         String accessToken = TokenUtil.generateToken(userId, TokenUtil.TYPE_ACCESS);
         String refreshToken = TokenUtil.generateToken(userId, TokenUtil.TYPE_REFRESH);
 
@@ -177,5 +179,27 @@ public class UserService {
         map.put("accessToken", accessToken);
         map.put("refreshToken", refreshToken);
         return map;
+    }
+
+    public void logout(Long userId, String refreshToken) {
+        userDao.deleteRefreshToken(refreshToken, userId);
+    }
+
+    public String refreshAccessToken(String refreshToken) throws Exception {
+        // I think we should use verifyToken to check if the token has expired or not, but in the course,
+        // the instructor didn't do this. I'm still wondering why.
+        try {
+            TokenUtil.verifyToken(refreshToken);
+        } catch (TokenExpiredException e) {
+            throw new ConditionException("555", "Token expired");
+        }
+
+        // If a user  has logout, the refreshToken may be deleted but hasn't expired.
+        RefreshTokenDetail refreshTokenDetail = userDao.getRefreshTokenDetail(refreshToken);
+        if (refreshTokenDetail == null) {
+            throw new ConditionException("555", "Illegal token");
+        }
+
+        return TokenUtil.generateToken(refreshTokenDetail.getUserId(), TokenUtil.TYPE_ACCESS);
     }
 }

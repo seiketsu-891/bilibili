@@ -131,4 +131,11 @@
                 #{createTime})
     </insert>
 
+    <select id="getRefreshTokenDetail" parameterType="java.lang.String"
+            resultType="com.bili.domain.RefreshTokenDetail">
+        select *
+        from t_refresh_token
+        where refreshToken = #{refreshToken}
+    </select>
+
 </mapper>

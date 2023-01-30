@@ -12,6 +12,7 @@ import com.bili.service.util.RSAUtil;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Map;
 
@@ -121,5 +122,26 @@ public class UserApi {
         }
 
         return new JsonResponse<>(userInfoPageResult);
+    }
+
+    /**
+     * logout(delete refresh-token)
+     */
+    @DeleteMapping("/refresh-tokens")
+    public JsonResponse<String> logout(HttpServletRequest request) {
+        String refreshToken = request.getHeader("refreshToken");
+        Long userId = userSupport.getCurrentUserId();
+        userService.logout(userId, refreshToken);
+        return JsonResponse.success();
+    }
+
+    /**
+     * generate a new accessToken
+     */
+    @PostMapping("/access-tokens")
+    public JsonResponse<String> refreshAccessToken(HttpServletRequest request) throws Exception {
+        String refreshToken = request.getHeader("refreshToken");
+        String accessToken = userService.refreshAccessToken(refreshToken);
+        return new JsonResponse<>(accessToken);
     }
 }

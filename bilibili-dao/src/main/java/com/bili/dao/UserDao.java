@@ -1,5 +1,6 @@
 package com.bili.dao;
 
+import com.bili.domain.RefreshTokenDetail;
 import com.bili.domain.User;
 import com.bili.domain.UserInfo;
 import org.apache.ibatis.annotations.Mapper;
@@ -35,4 +36,6 @@ public interface UserDao {
     Integer deleteRefreshToken(@Param("refreshToken") String refreshToken, @Param("userId") Long userId);
 
     Integer addRefreshToken(@Param("refreshToken") String refreshToken, @Param("userId") Long userId, @Param("createTime") Date createTime);
+
+    RefreshTokenDetail getRefreshTokenDetail(String refreshToken);
 }
