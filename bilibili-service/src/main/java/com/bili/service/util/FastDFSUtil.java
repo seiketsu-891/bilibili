@@ -10,7 +10,10 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -61,8 +64,6 @@ public class FastDFSUtil {
     /**
      * Upload a large file by slices
      * This method will be repeatedly executed until the full large file is uploaded.
-     * In practical usage,this implementation is typically handled by front-end developers.
-     * However, for the purposes of learning, we have included its implementation in this demonstration.
      */
     public String uploadFileBySlices(MultipartFile file, String fileMd5, Integer sliceNo, Integer totalSliceNo) throws Exception {
         if (file == null || sliceNo == null || totalSliceNo == null) {
@@ -107,7 +108,44 @@ public class FastDFSUtil {
         return resultPath;
     }
 
+    /**
+     * Divide a file into multiple small files
+     * In practical usage,this implementation is typically handled by front-end developers.
+     * However, for the purposes of learning, we have included its implementation in this demonstration.
+     */
+    public void divideFileIntoSlices(MultipartFile multipartFile) throws Exception {
+        final int SLICE_SIZE = 1024 * 1024 * 2;
+        String fileType = this.getFileType(multipartFile); // need this to manually add extension to divided small files
+        File file = this.convertMultipleFileToFile(multipartFile); // temp file
+        int fileNo = 1; // used for directory name
+
+        for (int currBytePosition = 0; currBytePosition < file.length(); currBytePosition += SLICE_SIZE) {
+            RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r");
+            randomAccessFile.seek(currBytePosition);  // read from currBytePosition
+            byte[] readBytes = new byte[SLICE_SIZE];
+            int readLen = randomAccessFile.read(readBytes);
+
+            FileOutputStream os = new FileOutputStream("/Downloads/" + fileNo + "." + fileType);
+            os.write(readBytes, 0, readLen);
+
+            os.close();
+            randomAccessFile.close();
+            fileNo++;
+        }
+        // delete temp file
+        file.delete();
+    }
+
     public void deleteFile(String filePath) {
         storageClient.deleteFile(filePath);
     }
+
+    private File convertMultipleFileToFile(MultipartFile multipartFile) throws IOException {
+        String originalFilename = multipartFile.getOriginalFilename();
+        String[] nameAndExtension = originalFilename.split("\\.");
+        File tempFile = File.createTempFile(nameAndExtension[0], "." + nameAndExtension[1]);
+        multipartFile.transferTo(tempFile);
+        return tempFile;
+    }
+
 }
