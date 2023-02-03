@@ -20,46 +20,16 @@ import java.util.List;
 import java.util.Set;
 
 public class FastDFSUtil {
-    private final String DEFAULT_GROUP = "group_1";
-    private final String PATH_KEY = "path-key:";
-    private final String UPLOADED_SIZE_KEY = "uploaded-size-key";
-    private final String UPLOADED_NO_KEY = "uploaded-no-key";
+    private static final String DEFAULT_GROUP = "group_1";
+    private static final String PATH_KEY = "path-key:";
+    private static final String UPLOADED_SIZE_KEY = "uploaded-size-key";
+    private static final String UPLOADED_NO_KEY = "uploaded-no-key";
     @Resource
     private FastFileStorageClient storageClient;
     @Resource
     private AppendFileStorageClient appendFileStorageClient;
     @Resource
     private RedisTemplate<String, String> redisTemplate;
-
-    private String getFileType(MultipartFile file) {
-        if (file == null) {
-            throw new ConditionException("Illegal file");
-        }
-
-        String fileName = file.getName();
-        int extensionStartIndex = fileName.lastIndexOf(".") + 1;
-        return fileName.substring(extensionStartIndex);
-    }
-
-    public String uploadCommonFile(MultipartFile file) throws IOException {
-        Set<MetaData> metaDataSet = new HashSet<>();
-        String type = getFileType(file);
-        StorePath storePath = storageClient.uploadFile(file.getInputStream(), file.getSize(), type, metaDataSet);
-        return storePath.getPath();
-    }
-
-    /**
-     * large file slice upload + breakpoint resume upload
-     */
-    public String uploadAppenderFile(MultipartFile file) throws IOException {
-        String fileType = getFileType(file);
-        StorePath storePath = appendFileStorageClient.uploadAppenderFile(DEFAULT_GROUP, file.getInputStream(), file.getSize(), fileType);
-        return storePath.getPath();
-    }
-
-    public void modifyAppenderFile(MultipartFile file, String path, Long offset) throws IOException {
-        appendFileStorageClient.modifyFile(DEFAULT_GROUP, path, file.getInputStream(), file.getSize(), offset);
-    }
 
     /**
      * Upload a large file by slices
@@ -106,6 +76,36 @@ public class FastDFSUtil {
             redisTemplate.delete(keyList);
         }
         return resultPath;
+    }
+
+    public String getFileType(MultipartFile file) {
+        if (file == null) {
+            throw new ConditionException("Illegal file");
+        }
+
+        String fileName = file.getName();
+        int extensionStartIndex = fileName.lastIndexOf(".") + 1;
+        return fileName.substring(extensionStartIndex);
+    }
+
+    public String uploadCommonFile(MultipartFile file) throws IOException {
+        Set<MetaData> metaDataSet = new HashSet<>();
+        String type = getFileType(file);
+        StorePath storePath = storageClient.uploadFile(file.getInputStream(), file.getSize(), type, metaDataSet);
+        return storePath.getPath();
+    }
+
+    /**
+     * large file slice upload + breakpoint resume upload
+     */
+    public String uploadAppenderFile(MultipartFile file) throws IOException {
+        String fileType = getFileType(file);
+        StorePath storePath = appendFileStorageClient.uploadAppenderFile(DEFAULT_GROUP, file.getInputStream(), file.getSize(), fileType);
+        return storePath.getPath();
+    }
+
+    public void modifyAppenderFile(MultipartFile file, String path, Long offset) throws IOException {
+        appendFileStorageClient.modifyFile(DEFAULT_GROUP, path, file.getInputStream(), file.getSize(), offset);
     }
 
     /**
