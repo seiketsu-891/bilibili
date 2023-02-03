@@ -44,7 +44,7 @@ public class TokenUtil {
             String userId = jwt.getKeyId();
             return Long.valueOf(userId);
         } catch (TokenExpiredException e) {
-            throw new ConditionException("555", "token expired");
+            throw new ConditionException("555", "Token expired");
         } catch (Exception e) {
             throw new ConditionException("Illegal token");
         }
