@@ -1,14 +1,15 @@
 package com.bili.service;
 
 import com.bili.dao.VideoDao;
+import com.bili.domain.PageResult;
 import com.bili.domain.Video;
 import com.bili.domain.VideoTag;
+import com.bili.domain.exception.ConditionException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class VideoService {
@@ -30,5 +31,23 @@ public class VideoService {
             videoTag.setCreateTime(now);
         }
         videoDao.batchAddVideoTags(videoTagList);
+    }
+
+    public PageResult<Video> getVideosPerPage(Integer pageNum, Integer pageSize, String area) {
+        if (pageNum == null || pageSize == null) {
+            throw new ConditionException("Illegal arguments");
+        }
+
+        Map<String, Object> params = new HashMap<>();
+        params.put("start", (pageNum - 1) * pageSize);
+        params.put("size", pageSize);
+        params.put("area", area);
+        Integer totalNum = videoDao.getTotalNum(params);
+        List<Video> videos = new ArrayList<>();
+
+        if (totalNum > 0) {
+            videos = videoDao.getVideosPerPage(params);
+        }
+        return new PageResult<>(totalNum, videos);
     }
 }

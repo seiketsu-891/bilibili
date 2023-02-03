@@ -17,6 +17,27 @@
             #{videoTag.createTime})
         </foreach>
     </insert>
+    
+    <select id="getTotalNum" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(1)
+        from t_video
+        where 1 =1
+        and
+        <if test="area!=null and area !=''">
+            area = #{area}
+        </if>
+    </select>
+
+    <select id="getVideosPerPage" parameterType="java.util.Map" resultType="com.bili.domain.Video">
+        select *
+        from t_video
+        where 1 = 1
+        and
+        <if test="area !=null and area !=''">
+            area = #{area}
+        </if>
+        limit #{start}, #{size}
+    </select>
 </mapper>
 
 
