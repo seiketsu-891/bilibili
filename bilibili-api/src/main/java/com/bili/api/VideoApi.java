@@ -4,6 +4,7 @@ import com.bili.api.support.UserSupport;
 import com.bili.domain.JsonResponse;
 import com.bili.domain.PageResult;
 import com.bili.domain.Video;
+import com.bili.domain.VideoFavourites;
 import com.bili.service.VideoService;
 import org.springframework.web.bind.annotation.*;
 
@@ -79,5 +80,36 @@ public class VideoApi {
         }
         Map<String, Object> likesInfo = videoService.getVideoLikes(userId, videoId);
         return new JsonResponse<>(likesInfo);
+    }
+
+    /**
+     * add a video to favourites
+     */
+    @PostMapping("/video-favourites")
+    public JsonResponse<String> addVideoToFavourites(@RequestBody VideoFavourites videoFavourites) {
+        Long userId = userSupport.getCurrentUserId();
+        videoService.addVideoFavourites(videoFavourites, userId);
+        return JsonResponse.success();
+    }
+
+    /**
+     * remove a video from favourites
+     */
+    @DeleteMapping("/video-favourites")
+    public JsonResponse<String> deleteVideoFromFavourites(Long videoId) {
+        Long userId = userSupport.getCurrentUserId();
+        videoService.deleteVideoFavourites(videoId, userId);
+        return JsonResponse.success();
+    }
+
+    @GetMapping("/video-favourites")
+    public JsonResponse<Map<String, Object>> getVideoFavourites(Long videoId) {
+        Long userId = null;
+        try {
+            userId = userSupport.getCurrentUserId();
+        } catch (Exception e) {
+        }
+        Map<String, Object> favInfo = videoService.getVideoFavourites(videoId, userId);
+        return new JsonResponse<>(favInfo);
     }
 }

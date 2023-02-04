@@ -1,10 +1,7 @@
 package com.bili.service;
 
 import com.bili.dao.VideoDao;
-import com.bili.domain.PageResult;
-import com.bili.domain.Video;
-import com.bili.domain.VideoLike;
-import com.bili.domain.VideoTag;
+import com.bili.domain.*;
 import com.bili.domain.exception.ConditionException;
 import com.bili.service.util.FastDFSUtil;
 import org.springframework.stereotype.Service;
@@ -91,5 +88,37 @@ public class VideoService {
         likesInfo.put("count", countOfLikes);
         likesInfo.put("liked", liked);
         return likesInfo;
+    }
+
+    public void addVideoFavourites(VideoFavourites videoFavourites, Long userId) {
+        Long videoId = videoFavourites.getVideoId();
+        Long groupId = videoFavourites.getFavouriteGroupId();
+        if (videoId == null || groupId == null) {
+            throw new ConditionException("Illegal arguments");
+        }
+
+        Video video = videoDao.getVideoById(videoId);
+        if (video == null) {
+            throw new ConditionException("This video does not exists");
+        }
+
+        videoDao.deleteVideoFavourites(videoId, userId);
+        videoFavourites.setUserId(userId);
+        videoFavourites.setCreateTime(new Date());
+        videoDao.addVideoFavourites(videoFavourites);
+    }
+
+    public void deleteVideoFavourites(Long videoId, Long userId) {
+        videoDao.deleteVideoFavourites(videoId, userId);
+    }
+
+    public Map<String, Object> getVideoFavourites(Long videoId, Long userId) {
+        Long favCount = videoDao.getVideoFavCount(videoId);
+        VideoFavourites videoFavourites = videoDao.getVideoFavByUserIdAndVideoId(userId, videoId);
+        boolean fav = (videoFavourites != null);
+        Map<String, Object> favInfo = new HashMap<>();
+        favInfo.put("count", favCount);
+        favInfo.put("fav", fav);
+        return favInfo;
     }
 }
