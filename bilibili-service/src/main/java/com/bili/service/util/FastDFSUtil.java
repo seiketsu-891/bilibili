@@ -1,24 +1,25 @@
 package com.bili.service.util;
 
 import com.bili.domain.exception.ConditionException;
+import com.github.tobato.fastdfs.domain.fdfs.FileInfo;
 import com.github.tobato.fastdfs.domain.fdfs.MetaData;
 import com.github.tobato.fastdfs.domain.fdfs.StorePath;
 import com.github.tobato.fastdfs.service.AppendFileStorageClient;
 import com.github.tobato.fastdfs.service.FastFileStorageClient;
 import io.netty.util.internal.StringUtil;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Component
 public class FastDFSUtil {
@@ -26,6 +27,8 @@ public class FastDFSUtil {
     private static final String PATH_KEY = "path-key:";
     private static final String UPLOADED_SIZE_KEY = "uploaded-size-key";
     private static final String UPLOADED_NO_KEY = "uploaded-no-key";
+    @Value("${fdfs.http.storage-addr}")
+    private String httpFdfsStorageAddr;
     @Resource
     private FastFileStorageClient storageClient;
     @Resource
@@ -150,4 +153,55 @@ public class FastDFSUtil {
         return tempFile;
     }
 
+    public void getVideosOnlineBySlices(HttpServletRequest request, HttpServletResponse response, String relativePath) throws Exception {
+        // get file info
+        FileInfo fileInfo = storageClient.queryFileInfo(DEFAULT_GROUP, relativePath);
+        long fileSizeTotal = fileInfo.getFileSize();
+
+        // get headers from request
+        Enumeration<String> headerNames = request.getHeaderNames();
+        Map<String, Object> headers = new HashMap<>();
+        while (headerNames.hasMoreElements()) {
+            String h = headerNames.nextElement();
+            headers.put(h, request.getHeader(h));
+        }
+
+        // set range
+        // The Range HTTP request header indicates the part of a document that the server should return
+        // This header is commonly used for video streaming and partial file downloads.
+        String range = request.getHeader("Range");
+
+        if (StringUtil.isNullOrEmpty(range)) {
+            range = "bytes=0-" + (fileSizeTotal - 1);
+        }
+        // The line of code below will split "range" to 2 to 3 parts.
+        // ex: "bytes=0-1" will be split into ["", "0", "1"];
+        // ex: "bytes=0" will be split into["", "0"];
+        String[] rangeData = range.split("bytes=|-");
+
+        long rangeStart = 0, rangeEnd = fileSizeTotal - 1;
+        if (rangeData.length >= 2) {
+            rangeStart = Long.parseLong(rangeData[1]);
+        }
+        if (rangeData.length >= 3) {
+            rangeEnd = Long.parseLong(rangeData[2]);
+        }
+
+        // set information in header
+        long len = rangeEnd - rangeStart + 1;
+        String contentRange = "bytes " + rangeStart + "-" + rangeEnd + "/" + fileSizeTotal;
+        response.setHeader("Content-Range", contentRange);
+        response.setHeader("Accept-Ranges", "bytes");
+        response.setHeader("Content-Type", "video/mp4");
+        response.setContentLength((int) len);
+        response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT); // status 206
+        // The HTTP 206 Partial Content success status response code indicates that
+        // the request has succeeded and the body contains the requested ranges of data,
+        // as described in the Range header of the request.
+
+        String url = httpFdfsStorageAddr + relativePath;
+        // retrieves the HTTP resource(a portion of video) specified by the url argument
+        // and writes its contents to an OutputStream passed as an argument response.getOutputStream().
+        HttpUtil.get(url, headers, response);
+    }
 }

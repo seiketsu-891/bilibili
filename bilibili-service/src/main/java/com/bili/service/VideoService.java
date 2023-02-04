@@ -5,16 +5,21 @@ import com.bili.domain.PageResult;
 import com.bili.domain.Video;
 import com.bili.domain.VideoTag;
 import com.bili.domain.exception.ConditionException;
+import com.bili.service.util.FastDFSUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.*;
 
 @Service
 public class VideoService {
     @Resource
     private VideoDao videoDao;
+    @Resource
+    private FastDFSUtil fastDFSUtil;
 
     @Transactional
     public void addVideos(Video video) {
@@ -49,5 +54,9 @@ public class VideoService {
             videos = videoDao.getVideosPerPage(params);
         }
         return new PageResult<>(totalNum, videos);
+    }
+
+    public void viewVideosOnlineBySlices(HttpServletRequest request, HttpServletResponse response, String relativePath) throws Exception {
+        fastDFSUtil.getVideosOnlineBySlices(request, response, relativePath);
     }
 }

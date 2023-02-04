@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 @RestController
 public class VideoApi {
@@ -38,4 +40,12 @@ public class VideoApi {
         return new JsonResponse<>(pageResult);
     }
 
+    /**
+     * get a portion of video to watch (the functionality of viewing a video online)
+     */
+
+    @GetMapping("/video-slices")
+    public void viewVideosOnlineBySlices(HttpServletRequest request, HttpServletResponse response, String relativePath) throws Exception {
+        videoService.viewVideosOnlineBySlices(request, response, relativePath);
+    }
 }
