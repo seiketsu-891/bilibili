@@ -17,7 +17,7 @@
             #{videoTag.createTime})
         </foreach>
     </insert>
-    
+
     <select id="getTotalNum" parameterType="java.util.Map" resultType="java.lang.Integer">
         select count(1)
         from t_video
@@ -37,6 +37,38 @@
             area = #{area}
         </if>
         limit #{start}, #{size}
+    </select>
+
+    <select id="getVideoById" parameterType="java.lang.Long" resultType="com.bili.domain.Video">
+        select *
+        from t_video
+        where id = #{id}
+    </select>
+
+    <select id="getVideoLikeByUserIdAndVideoId" resultType="com.bili.domain.VideoLike">
+        select *
+        from t_video_like
+        where videoId = #{videoId}
+          and userId = #{userId}
+    </select>
+
+
+    <insert id="addVideoLike" parameterType="com.bili.domain.VideoLike">
+        insert into t_video_like (userId, videoId, createTime)
+        values (#{userId}, #{videoId}, #{createTime})
+    </insert>
+
+    <delete id="deleteVideoLike">
+        delete
+        from t_video_like
+        where userId = #{userId}
+          and videoId = #{videoId}
+    </delete>
+
+    <select id="getVideoLikesCount" parameterType="java.lang.Long" resultType="java.lang.Long">
+        select count(1)
+        from t_video_like
+        where videoId = #{videoId}
     </select>
 </mapper>
 
