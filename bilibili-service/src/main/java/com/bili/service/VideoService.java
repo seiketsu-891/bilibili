@@ -16,6 +16,8 @@ import java.util.*;
 @Service
 public class VideoService {
     @Resource
+    UserCoinService userCoinService;
+    @Resource
     private VideoDao videoDao;
     @Resource
     private FastDFSUtil fastDFSUtil;
@@ -120,5 +122,54 @@ public class VideoService {
         favInfo.put("count", favCount);
         favInfo.put("fav", fav);
         return favInfo;
+    }
+
+    public void addVideoCoin(VideoCoin videoCoin, Long userId) {
+        Long videoId = videoCoin.getVideoId();
+        if (videoId == null) {
+            throw new ConditionException("Illegal arguments");
+        }
+
+        Long userCoinAmount = userCoinService.getUserCoinAmount(userId);
+        // If the user has never bought any coins, userCoinAmount would be  null,
+        // so we deal with the null case here
+        // I think when we create a user, we can insert an entry to t_user_coin,
+        // in this case, serCoinAmount  would never be null
+        userCoinAmount = userCoinAmount != null ? userCoinAmount : 0;
+        if (videoCoin.getAmount() > userCoinAmount) {
+            throw new ConditionException("You don't have enough coins");
+        }
+
+        Video video = videoDao.getVideoById(videoId);
+        if (video == null) {
+            throw new ConditionException("This video does not exists");
+        }
+
+        Date now = new Date();
+        videoCoin.setUserId(userId);
+        VideoCoin videoCoinDb = videoDao.getVideoCoinByUserIdAndVideoId(userId, videoId);
+        if (videoCoinDb == null) { // This user add video coins to current video for the first time
+            videoCoin.setCreateTime(now);
+            videoDao.addVideoCoin(videoDao);
+        } else {
+            videoCoin.setUpdateTime(now);
+            videoCoin.setAmount(videoCoinDb.getAmount() + videoCoin.getAmount());
+            videoDao.updateVideoCoin(videoCoin);
+        }
+
+        // update coin balance of the user
+        userCoinAmount -= videoCoin.getUserId();
+        userCoinService.updateUserCoinAmount(userId, userCoinAmount, now);
+    }
+
+    public Map<String, Object> getVideoCoins(Long videoId, Long userId) {
+        Long coinCount = videoDao.getVideoCoinCount(videoId);
+        VideoCoin videoCoin = videoDao.getVideoCoinByUserIdAndVideoId(userId, videoId);
+        Long userVideoCoinCount = videoCoin.getAmount();
+        userVideoCoinCount = userVideoCoinCount != null ? userVideoCoinCount : 0;
+        Map<String, Object> coinInfo = new HashMap<>();
+        coinInfo.put("count", coinCount);
+        coinInfo.put("given", userVideoCoinCount);
+        return coinInfo;
     }
 }

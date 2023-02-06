@@ -1,10 +1,7 @@
 package com.bili.api;
 
 import com.bili.api.support.UserSupport;
-import com.bili.domain.JsonResponse;
-import com.bili.domain.PageResult;
-import com.bili.domain.Video;
-import com.bili.domain.VideoFavourites;
+import com.bili.domain.*;
 import com.bili.service.VideoService;
 import org.springframework.web.bind.annotation.*;
 
@@ -96,14 +93,14 @@ public class VideoApi {
      * remove a video from favourites
      */
     @DeleteMapping("/video-favourites")
-    public JsonResponse<String> deleteVideoFromFavourites(Long videoId) {
+    public JsonResponse<String> deleteVideoFromFavourites(@RequestParam Long videoId) {
         Long userId = userSupport.getCurrentUserId();
         videoService.deleteVideoFavourites(videoId, userId);
         return JsonResponse.success();
     }
 
     @GetMapping("/video-favourites")
-    public JsonResponse<Map<String, Object>> getVideoFavourites(Long videoId) {
+    public JsonResponse<Map<String, Object>> getVideoFavourites(@RequestParam Long videoId) {
         Long userId = null;
         try {
             userId = userSupport.getCurrentUserId();
@@ -111,5 +108,23 @@ public class VideoApi {
         }
         Map<String, Object> favInfo = videoService.getVideoFavourites(videoId, userId);
         return new JsonResponse<>(favInfo);
+    }
+
+    @PostMapping("/video-coins")
+    public JsonResponse<String> addVideoCoins(@RequestBody VideoCoin videoCoin) {
+        Long userId = userSupport.getCurrentUserId();
+        videoService.addVideoCoin(videoCoin, userId);
+        return JsonResponse.success();
+    }
+
+    @GetMapping("/video-coins")
+    public JsonResponse<Map<String, Object>> getVideoCoins(@RequestParam Long videoId) {
+        Long userId = null;
+        try {
+            userId = userSupport.getCurrentUserId();
+        } catch (Exception e) {
+        }
+        Map<String, Object> coinInfo = videoService.getVideoCoins(videoId, userId);
+        return new JsonResponse<>(coinInfo);
     }
 }

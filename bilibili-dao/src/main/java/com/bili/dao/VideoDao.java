@@ -1,9 +1,6 @@
 package com.bili.dao;
 
-import com.bili.domain.Video;
-import com.bili.domain.VideoFavourites;
-import com.bili.domain.VideoLike;
-import com.bili.domain.VideoTag;
+import com.bili.domain.*;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -37,4 +34,12 @@ public interface VideoDao {
     Long getVideoFavCount(Long videoId);
 
     VideoFavourites getVideoFavByUserIdAndVideoId(@Param("userId") Long userId, @Param("videoId") Long videoId);
+
+    VideoCoin getVideoCoinByUserIdAndVideoId(@Param("userId") Long userId, @Param("videoId") Long videoId);
+
+    Integer addVideoCoin(VideoDao videoDao);
+
+    Integer updateVideoCoin(VideoCoin videoCoin);
+
+    Long getVideoCoinCount(Long videoId);
 }
