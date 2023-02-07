@@ -202,4 +202,8 @@ public class UserService {
 
         return TokenUtil.generateToken(refreshTokenDetail.getUserId(), TokenUtil.TYPE_ACCESS);
     }
+
+    public List<UserInfo> batchGetUserInfoByUserIds(Set<Long> userIdList) {
+        return userDao.batchGetUserInfoByUserIds(userIdList);
+    }
 }

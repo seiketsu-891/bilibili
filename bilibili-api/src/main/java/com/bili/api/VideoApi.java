@@ -99,6 +99,11 @@ public class VideoApi {
         return JsonResponse.success();
     }
 
+    /**
+     * get the information about how many people have added current video to their favourites
+     * and if the current user has added this video to his or her favorites
+     */
+
     @GetMapping("/video-favourites")
     public JsonResponse<Map<String, Object>> getVideoFavourites(@RequestParam Long videoId) {
         Long userId = null;
@@ -110,6 +115,9 @@ public class VideoApi {
         return new JsonResponse<>(favInfo);
     }
 
+    /**
+     * give a video coins
+     */
     @PostMapping("/video-coins")
     public JsonResponse<String> addVideoCoins(@RequestBody VideoCoin videoCoin) {
         Long userId = userSupport.getCurrentUserId();
@@ -117,6 +125,9 @@ public class VideoApi {
         return JsonResponse.success();
     }
 
+    /**
+     * get the information about coins of a video
+     */
     @GetMapping("/video-coins")
     public JsonResponse<Map<String, Object>> getVideoCoins(@RequestParam Long videoId) {
         Long userId = null;
@@ -126,5 +137,24 @@ public class VideoApi {
         }
         Map<String, Object> coinInfo = videoService.getVideoCoins(videoId, userId);
         return new JsonResponse<>(coinInfo);
+    }
+
+    /**
+     * post a comment to a video
+     */
+    @PostMapping("/video-comments")
+    public JsonResponse<String> addVideoComments(@RequestBody VideoComment videoComment) {
+        Long userId = userSupport.getCurrentUserId();
+        videoService.addVideoComment(videoComment, userId);
+        return JsonResponse.success();
+    }
+
+    /**
+     * get the comments of a video with pagination
+     */
+    @GetMapping("/video-comments")
+    public JsonResponse<PageResult<VideoComment>> getVideoComments(@RequestParam Integer pageNum, @RequestParam Integer pageSize, @RequestParam Long videoId) {
+        PageResult<VideoComment> pageResult = videoService.getVideoCommentsPerPage(pageNum, pageSize, videoId);
+        return new JsonResponse<>(pageResult);
     }
 }

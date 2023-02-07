@@ -121,6 +121,52 @@
         from t_video_coin
         where videoId = #{videoId}
     </select>
+
+    <select id="getVideoCommentById" parameterType="java.lang.Long" resultType="com.bili.domain.VideoComment">
+        select *
+        from t_video_comment
+        where id = #{id}
+    </select>
+
+    <insert id="addVideoComment" parameterType="com.bili.domain.VideoComment">
+        insert into t_video_comment
+            (videoId, userId, comment, replyUserId, rootId, createTime)
+        values (#{videoId}, #{userId}, #{comment}, #{replyUserId}, #{rootId}, #{createTime})
+    </insert>
+
+    <select id="getVideoCommentCount" parameterType="java.util.Map" resultType="java.lang.Integer">
+        select count(1)
+        from t_video_comment
+        where videoId = #{videoId}
+          and rootId is null
+    </select>
+
+    <select id="getVideoCommentsPerPage" parameterType="java.util.Map" resultType="com.bili.domain.VideoComment">
+        select *
+        from t_video_comment
+        where videoId = #{videoId}
+          and rootId is null
+        order by id desc
+        limit #{start}, #{size}
+    </select>
+
+    <select id="batchGetVideoCommentByRootIds" parameterType="java.util.List" resultType="com.bili.domain.VideoComment">
+        select * from t_video_comment
+        where rootId
+        in
+        <foreach collection="rootIdList" item="rootId" open="(" close=")" separator=",">
+            #{rootId}
+        </foreach>
+    </select>
+    
+    <select id="batchGetUserInfoByUserIds" parameterType="java.util.List" resultType="com.bili.domain.UserInfo">
+        select *
+        from t_user_info
+        where userId in
+        <foreach collection="userIdList" item="userId" open="(" close=")" separator=",">
+            #{userId}
+        </foreach>
+    </select>
 </mapper>
 
 

@@ -11,6 +11,8 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.*;
+import java.util.stream.Collectors;
+
 
 @Transactional
 @Service
@@ -21,6 +23,9 @@ public class VideoService {
     private VideoDao videoDao;
     @Resource
     private FastDFSUtil fastDFSUtil;
+
+    @Resource
+    private UserService userService;
 
     public void addVideos(Video video) {
         Date now = new Date();
@@ -63,7 +68,7 @@ public class VideoService {
     public void addVideoLike(Long userId, Long videoId) {
         Video video = videoDao.getVideoById(videoId);
         if (video == null) {
-            throw new ConditionException("This video does not exists");
+            throw new ConditionException("This video does not exist");
         }
 
         VideoLike videoLike = videoDao.getVideoLikeByUserIdAndVideoId(userId, videoId);
@@ -101,7 +106,7 @@ public class VideoService {
 
         Video video = videoDao.getVideoById(videoId);
         if (video == null) {
-            throw new ConditionException("This video does not exists");
+            throw new ConditionException("This video does not exist");
         }
 
         videoDao.deleteVideoFavourites(videoId, userId);
@@ -142,7 +147,7 @@ public class VideoService {
 
         Video video = videoDao.getVideoById(videoId);
         if (video == null) {
-            throw new ConditionException("This video does not exists");
+            throw new ConditionException("This video does not exist");
         }
 
         Date now = new Date();
@@ -171,5 +176,79 @@ public class VideoService {
         coinInfo.put("count", coinCount);
         coinInfo.put("given", userVideoCoinCount);
         return coinInfo;
+    }
+
+    public void addVideoComment(VideoComment videoComment, Long userId) {
+        Long videoId = videoComment.getVideoId();
+        if (videoId == null) {
+            throw new ConditionException("Illegal arguments");
+        }
+
+        Video video = videoDao.getVideoById(videoId);
+        if (video == null) {
+            throw new ConditionException("This video does not exist");
+        }
+
+        // this code fragment is added by me, it's not in the course demo
+        VideoComment comment = videoDao.getVideoCommentById(videoComment.getRootId());
+        if (comment == null) {
+            throw new ConditionException("The comment you are replying to does not exist");
+        }
+
+        videoComment.setUserId(userId);
+        videoComment.setCreateTime(new Date());
+        videoDao.addVideoComment(videoComment);
+    }
+
+    public PageResult<VideoComment> getVideoCommentsPerPage(Integer pageNum, Integer pageSize, Long videoId) {
+        if (pageNum == null || pageSize == null) {
+            throw new ConditionException("Illegal arguments");
+        }
+        Video video = videoDao.getVideoById(videoId);
+        if (video == null) {
+            throw new ConditionException("This video does not exist");
+        }
+
+        Map<String, Object> params = new HashMap<>();
+        params.put("start", (pageNum - 1) * pageSize);
+        params.put("size", pageSize);
+        params.put("videId", videoId);
+        Integer totalNum = videoDao.getVideoCommentCount(params);
+
+        List<VideoComment> comments = new ArrayList<>();
+
+        if (totalNum > 0) {
+            comments = videoDao.getVideoCommentsPerPage(params);
+            // get child comments
+            List<Long> rootIdLis = comments.stream().map(VideoComment::getId).collect(Collectors.toList());
+            List<VideoComment> childCommentsList = videoDao.batchGetVideoCommentByRootIds(rootIdLis);
+
+            // get userInfos
+            Set<Long> userIdList = comments.stream().map(VideoComment::getUserId).collect(Collectors.toSet());
+            Set<Long> replayTargetUserIdList = comments.stream().map(VideoComment::getReplyUserId).collect(Collectors.toSet());
+            userIdList.addAll(replayTargetUserIdList);
+            List<UserInfo> userInfoList = userService.batchGetUserInfoByUserIds(userIdList);
+            // By creating this map:
+            // in the loop later, we can get UserInfos by the keys of the map(userIds)
+            // otherwise, we need to loop the userInfoList;
+            Map<Long, UserInfo> userInfoMap = userInfoList.stream().collect(Collectors.toMap(UserInfo::getUserId, userInfo -> userInfo));
+
+            // set childComments and userInfos for comments
+            for (VideoComment comment : comments) {
+                Long id = comment.getId();
+                List<VideoComment> childList = new ArrayList<>();
+                for (VideoComment c : childCommentsList) {
+                    // set userInfos from childList items
+                    if (id.equals(c.getRootId())) {
+                        c.setUserInfo(userInfoMap.get(c.getUserId()));
+                        c.setReplyTargetUserInfo(userInfoMap.get(c.getReplyUserId()));
+                        childList.add(c);
+                    }
+                }
+                comment.setChildComment(childList);
+                comment.setUserInfo(userInfoMap.get(comment.getUserId()));
+            }
+        }
+        return new PageResult<>(totalNum, comments);
     }
 }
