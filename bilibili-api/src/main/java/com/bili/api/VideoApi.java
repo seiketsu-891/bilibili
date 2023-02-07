@@ -157,4 +157,13 @@ public class VideoApi {
         PageResult<VideoComment> pageResult = videoService.getVideoCommentsPerPage(pageNum, pageSize, videoId);
         return new JsonResponse<>(pageResult);
     }
+
+    /**
+     * get the information about a video
+     */
+    @GetMapping("/video-details")
+    public JsonResponse<Map<String, Object>> getVideoDetails(@RequestParam Long videoId) {
+        Map<String, Object> vidDetails = videoService.getVideoDetails(videoId);
+        return new JsonResponse<>(vidDetails);
+    }
 }

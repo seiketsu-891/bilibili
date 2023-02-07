@@ -251,4 +251,14 @@ public class VideoService {
         }
         return new PageResult<>(totalNum, comments);
     }
+
+    public Map<String, Object> getVideoDetails(Long videoId) {
+        Video video = videoDao.getVideoDetails(videoId);
+        UserInfo userInfo = userService.getUserInfoByUserId(video.getUserId());
+
+        Map<String, Object> info = new HashMap<>();
+        info.put("video", video);
+        info.put("userInfo", userInfo);
+        return info;
+    }
 }
