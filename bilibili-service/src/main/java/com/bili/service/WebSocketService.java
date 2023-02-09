@@ -2,8 +2,12 @@ package com.bili.service;
 
 import com.alibaba.fastjson.JSONObject;
 import com.bili.domain.Danmu;
+import com.bili.domain.constant.RocketMQConstant;
+import com.bili.service.util.RocketMQUtil;
 import com.bili.service.util.TokenUtil;
 import io.netty.util.internal.StringUtil;
+import org.apache.rocketmq.client.producer.DefaultMQProducer;
+import org.apache.rocketmq.common.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -14,6 +18,7 @@ import javax.websocket.*;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -22,8 +27,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Component
 @ServerEndpoint("/websocket/{token}")
 public class WebSocketService {
+    public static final ConcurrentHashMap<String, WebSocketService> WEBSOCKET_MAP = new ConcurrentHashMap<>();
     private static final AtomicInteger ONLINE_COUNT = new AtomicInteger(0);
-    private static final ConcurrentHashMap<String, WebSocketService> WEBSOCKET_MAP = new ConcurrentHashMap<>();
     private static ApplicationContext APPLICATION_CONTEXT;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private Session session;
@@ -80,9 +85,12 @@ public class WebSocketService {
             try {
                 for (Map.Entry<String, WebSocketService> entry : WEBSOCKET_MAP.entrySet()) {
                     WebSocketService webSocketService = entry.getValue();
-                    if (webSocketService.session.isOpen()) {
-                        webSocketService.sendMessage(msg);
-                    }
+                    DefaultMQProducer danmusProducer = (DefaultMQProducer) APPLICATION_CONTEXT.getBean("danmusProducer");
+                    JSONObject jsonObject = new JSONObject();
+                    jsonObject.put("sessionID", sessionId);
+                    jsonObject.put("message", msg);
+                    Message message = new Message(RocketMQConstant.TOPIC_DANMUS, jsonObject.toJSONString().getBytes(StandardCharsets.UTF_8));
+                    RocketMQUtil.asyncSendMsg(danmusProducer, message);
                 }
                 // save danmu to database
                 if (this.userId != null) {
@@ -107,5 +115,13 @@ public class WebSocketService {
 
     public void sendMessage(String msg) throws IOException {
         this.session.getBasicRemote().sendText(msg);
+    }
+
+    public Session getSession() {
+        return session;
+    }
+
+    public String getSessionId() {
+        return sessionId;
     }
 }
