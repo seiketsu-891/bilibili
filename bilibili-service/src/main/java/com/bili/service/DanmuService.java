@@ -6,6 +6,7 @@ import com.bili.dao.DanmuDao;
 import com.bili.domain.Danmu;
 import io.netty.util.internal.StringUtil;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -21,6 +22,11 @@ public class DanmuService {
     private RedisTemplate<String, String> redisTemplate;
 
     public void addDanmu(Danmu danmu) {
+        danmuDao.addDanmu(danmu);
+    }
+
+    @Async
+    public void asyncDanmu(Danmu danmu) {
         danmuDao.addDanmu(danmu);
     }
 
