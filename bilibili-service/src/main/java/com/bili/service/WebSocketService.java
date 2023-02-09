@@ -1,5 +1,9 @@
 package com.bili.service;
 
+import com.alibaba.fastjson.JSONObject;
+import com.bili.domain.Danmu;
+import com.bili.service.util.TokenUtil;
+import io.netty.util.internal.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -7,13 +11,16 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 import javax.websocket.*;
+import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
+import java.util.Date;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Component
-@ServerEndpoint("/websocket")
+@ServerEndpoint("/websocket/{token}")
 public class WebSocketService {
     private static final AtomicInteger ONLINE_COUNT = new AtomicInteger(0);
     private static final ConcurrentHashMap<String, WebSocketService> WEBSOCKET_MAP = new ConcurrentHashMap<>();
@@ -21,6 +28,7 @@ public class WebSocketService {
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private Session session;
     private String sessionId;
+    private Long userId;
 
 
     public static void setApplicationContext(ApplicationContext applicationContext) {
@@ -29,8 +37,11 @@ public class WebSocketService {
 
     @OnOpen
     // This method is called when a client establishes a WebSocket connection to the server
-    public void openConnection(Session session) {
-//        RedisTemplate<String, String> redisTemplate = APPLICATION_CONTEXT.getBean(RedisTemplate.class);
+    public void openConnection(Session session, @PathParam("token") String token) {
+        try {
+            this.userId = TokenUtil.verifyToken(token);
+        } catch (Exception e) {
+        }
         RedisTemplate<String, String> redisTemplate = (RedisTemplate) APPLICATION_CONTEXT.getBean("redisTemplate");
         String sessionId = session.getId();
         this.session = session;
@@ -63,6 +74,30 @@ public class WebSocketService {
 
     @OnMessage
     public void onMessage(String msg) {
+        logger.info("user:" + sessionId + ", msg:" + msg);
+        if (!StringUtil.isNullOrEmpty(msg)) {
+            // send the message to all the online clients
+            try {
+                for (Map.Entry<String, WebSocketService> entry : WEBSOCKET_MAP.entrySet()) {
+                    WebSocketService webSocketService = entry.getValue();
+                    if (webSocketService.session.isOpen()) {
+                        webSocketService.sendMessage(msg);
+                    }
+                }
+                // save danmu to database
+                if (this.userId != null) {
+                    Danmu danmu = JSONObject.parseObject(msg, Danmu.class);
+                    danmu.setUserId(userId);
+                    danmu.setCreateTime(new Date());
+                    DanmuService danmuService = (DanmuService) APPLICATION_CONTEXT.getBean("danmuService");
+                    danmuService.addDanmu(danmu);
+                    // save to redis
+                    danmuService.addDanmusToRedis(danmu);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @OnError
