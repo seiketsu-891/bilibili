@@ -176,4 +176,29 @@ public class VideoApi {
         Video video = elasticsearchService.getVideo(keyword);
         return new JsonResponse<>(video);
     }
+
+    /**
+     * add a video viewing record
+     */
+    @PostMapping("/video-views")
+    public JsonResponse<String> addVideoView(@RequestBody VideoView videoView, HttpServletRequest request) {
+        Long userId;
+        try {
+            userId = userSupport.getCurrentUserId();
+            videoView.setUserId(userId);
+            videoService.addVideoView(videoView, request);
+        } catch (Exception e) {
+            videoService.addVideoView(videoView, request);
+        }
+        return JsonResponse.success();
+    }
+
+    /**
+     * get the count of the video viewing records
+     */
+    @GetMapping("/video-view-counts")
+    public JsonResponse<Integer> getVideoViewCounts(@RequestParam Long videoId) {
+        Integer count = videoService.getVideoViewCount(videoId);
+        return new JsonResponse<>(count);
+    }
 }

@@ -4,12 +4,15 @@ import com.bili.dao.VideoDao;
 import com.bili.domain.*;
 import com.bili.domain.exception.ConditionException;
 import com.bili.service.util.FastDFSUtil;
+import com.bili.service.util.IpUtil;
+import eu.bitwalker.useragentutils.UserAgent;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -260,5 +263,38 @@ public class VideoService {
         info.put("video", video);
         info.put("userInfo", userInfo);
         return info;
+    }
+
+    public void addVideoView(VideoView videoView, HttpServletRequest request) {
+        String agent = request.getHeader("User-Agent");
+        UserAgent userAgent = UserAgent.parseUserAgentString(agent);
+        String clientId = String.valueOf(userAgent.getId());
+        String ip = IpUtil.getIP(request);
+        Map<String, Object> params = new HashMap<>();
+
+        Long userId = videoView.getUserId();
+        if (userId != null) {
+            params.put("userId", userId);
+        } else {
+            params.put("ip", ip);
+            params.put("clientId", clientId);
+        }
+
+        Date now = new Date();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        params.put("today", sdf.format(now));
+        params.put("videoId", videoView.getVideoId());
+
+        VideoView videoViewDb = videoDao.getVideoView(params);
+        if (videoViewDb == null) {
+            videoView.setIp(ip);
+            videoView.setClientId(clientId);
+            videoView.setCreateTime(now);
+            videoDao.addVideoView(videoView);
+        }
+    }
+
+    public Integer getVideoViewCount(Long videoId) {
+        return videoDao.getVideoViewCount(videoId);
     }
 }
