@@ -2,6 +2,7 @@ package com.bili.api;
 
 import com.bili.api.support.UserSupport;
 import com.bili.domain.*;
+import com.bili.service.ElasticsearchService;
 import com.bili.service.VideoService;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,6 +17,8 @@ public class VideoApi {
     private UserSupport userSupport;
     @Resource
     private VideoService videoService;
+    @Resource
+    private ElasticsearchService elasticsearchService;
 
     /**
      * post a new vides
@@ -24,6 +27,7 @@ public class VideoApi {
     public JsonResponse<String> addVideo(@RequestBody Video video) {
         video.setUserId(userSupport.getCurrentUserId());
         videoService.addVideos(video);
+        elasticsearchService.addVideo(video);
         return JsonResponse.success();
     }
 
@@ -165,5 +169,11 @@ public class VideoApi {
     public JsonResponse<Map<String, Object>> getVideoDetails(@RequestParam Long videoId) {
         Map<String, Object> vidDetails = videoService.getVideoDetails(videoId);
         return new JsonResponse<>(vidDetails);
+    }
+
+    @GetMapping("/es-videos")
+    public JsonResponse<Video> getEsVideos(@RequestParam String keyword) {
+        Video video = elasticsearchService.getVideo(keyword);
+        return new JsonResponse<>(video);
     }
 }
