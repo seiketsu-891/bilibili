@@ -4,11 +4,13 @@ import com.bili.api.support.UserSupport;
 import com.bili.domain.*;
 import com.bili.service.ElasticsearchService;
 import com.bili.service.VideoService;
+import org.apache.mahout.cf.taste.common.TasteException;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -200,5 +202,15 @@ public class VideoApi {
     public JsonResponse<Integer> getVideoViewCounts(@RequestParam Long videoId) {
         Integer count = videoService.getVideoViewCount(videoId);
         return new JsonResponse<>(count);
+    }
+
+    /**
+     * get video recommendations
+     */
+    @GetMapping("/recommendations")
+    public JsonResponse<List<Video>> recommend() throws TasteException {
+        Long userId = userSupport.getCurrentUserId();
+        List<Video> list = videoService.recommend(userId);
+        return new JsonResponse<>(list);
     }
 }

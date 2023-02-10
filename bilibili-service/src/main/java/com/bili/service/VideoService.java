@@ -6,6 +6,20 @@ import com.bili.domain.exception.ConditionException;
 import com.bili.service.util.FastDFSUtil;
 import com.bili.service.util.IpUtil;
 import eu.bitwalker.useragentutils.UserAgent;
+import org.apache.mahout.cf.taste.common.TasteException;
+import org.apache.mahout.cf.taste.impl.common.FastByIDMap;
+import org.apache.mahout.cf.taste.impl.model.GenericDataModel;
+import org.apache.mahout.cf.taste.impl.model.GenericPreference;
+import org.apache.mahout.cf.taste.impl.model.GenericUserPreferenceArray;
+import org.apache.mahout.cf.taste.impl.neighborhood.NearestNUserNeighborhood;
+import org.apache.mahout.cf.taste.impl.recommender.GenericUserBasedRecommender;
+import org.apache.mahout.cf.taste.impl.similarity.UncenteredCosineSimilarity;
+import org.apache.mahout.cf.taste.model.DataModel;
+import org.apache.mahout.cf.taste.model.PreferenceArray;
+import org.apache.mahout.cf.taste.neighborhood.UserNeighborhood;
+import org.apache.mahout.cf.taste.recommender.RecommendedItem;
+import org.apache.mahout.cf.taste.recommender.Recommender;
+import org.apache.mahout.cf.taste.similarity.UserSimilarity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -296,5 +310,35 @@ public class VideoService {
 
     public Integer getVideoViewCount(Long videoId) {
         return videoDao.getVideoViewCount(videoId);
+    }
+
+    public List<Video> recommend(Long userId) throws TasteException {
+        List<UserPreferences> list = videoDao.getAllUserPreferences();
+        DataModel dataModel = this.createDataModel(list);
+        UserSimilarity similarity = new UncenteredCosineSimilarity(dataModel);
+        System.out.println(similarity.userSimilarity(11, 12));
+        UserNeighborhood userNeighborhood = new NearestNUserNeighborhood(2, similarity, dataModel);
+        long[] ar = userNeighborhood.getUserNeighborhood(userId);
+        Recommender recommender = new GenericUserBasedRecommender(dataModel, userNeighborhood, similarity);
+
+        List<RecommendedItem> recommendedItems = recommender.recommend(userId, 5);
+        List<Long> itemIds = recommendedItems.stream().map(RecommendedItem::getItemID).collect(Collectors.toList());
+        return videoDao.batchGetVideosByIds(itemIds);
+    }
+
+    private DataModel createDataModel(List<UserPreferences> userPreferenceList) {
+        FastByIDMap<PreferenceArray> fastByIdMap = new FastByIDMap<>();
+        Map<Long, List<UserPreferences>> map = userPreferenceList.stream().collect(Collectors.groupingBy(UserPreferences::getUserId));
+        Collection<List<UserPreferences>> list = map.values();
+        for (List<UserPreferences> userPreferences : list) {
+            GenericPreference[] array = new GenericPreference[userPreferences.size()];
+            for (int i = 0; i < userPreferences.size(); i++) {
+                UserPreferences userPreference = userPreferences.get(i);
+                GenericPreference item = new GenericPreference(userPreference.getUserId(), userPreference.getVideoId(), userPreference.getValue());
+                array[i] = item;
+            }
+            fastByIdMap.put(array[0].getUserID(), new GenericUserPreferenceArray(Arrays.asList(array)));
+        }
+        return new GenericDataModel(fastByIdMap);
     }
 }
