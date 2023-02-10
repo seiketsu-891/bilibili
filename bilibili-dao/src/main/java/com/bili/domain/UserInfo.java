@@ -1,17 +1,28 @@
 package com.bili.domain;
 
+import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
+
 import java.util.Date;
 
+@Document(indexName = "user-info")
 public class UserInfo {
-    private  Long id;
+    @Id
+    private Long id;
     private Long userId;
+    @Field(type = FieldType.Text)
     private String nick;
     private String avatar;
     private String sign;
     private String gender;
     private String birth;
     private Boolean followedByCurrentUser;
+    @Field(type = FieldType.Date)
     private Date createTime;
+    @Field(type = FieldType.Date)
+    private Date updateTime;
 
     public Boolean getFollowedByCurrentUser() {
         return followedByCurrentUser;
@@ -20,8 +31,6 @@ public class UserInfo {
     public void setFollowedByCurrentUser(Boolean followedByCurrentUser) {
         this.followedByCurrentUser = followedByCurrentUser;
     }
-
-    private Date updateTime;
 
     public Long getId() {
         return id;
